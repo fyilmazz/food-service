@@ -1,5 +1,8 @@
 from django.db import connection
 from django.contrib.auth.models import User
+import logging
+
+logger = logging.getLogger('django')
 
 
 def get_foods():
@@ -13,7 +16,7 @@ def get_foods():
 def get_reviews_with_usernames(username=None):
     with connection.cursor() as cursor:
         if username:
-            cursor.execute("SELECT * FROM REVIEWS_WITH_USERNAMES WHERE username = '%s';", username)
+            cursor.execute("SELECT * FROM REVIEWS_WITH_USERNAMES WHERE username = '{0}';".format(username))
         else:
             cursor.execute("SELECT * FROM REVIEWS_WITH_USERNAMES;")
         reviews = cursor.fetchall()
@@ -24,21 +27,23 @@ def get_reviews_with_usernames(username=None):
 def get_users_with_total_spendings(username=None):
     with connection.cursor() as cursor:
         if username:
-            cursor.execute("SELECT * FROM USERS_WITH_TOTAL_SPENDINGS WHERE username = '%s';", username)
+            cursor.execute("SELECT total_spending FROM USERS_WITH_TOTAL_SPENDINGS WHERE username = '{0}';".format(username))
+            total_spend = cursor.fetchone()
         else:
             cursor.execute("SELECT * FROM USERS_WITH_TOTAL_SPENDINGS;")
-        users = cursor.fetchall()
+            total_spend = cursor.fetchall()
 
-    return users
+    return total_spend
 
 
 def get_cart_total(username=None):
     with connection.cursor() as cursor:
         if username:
-            cursor.execute("SELECT * FROM CALCULATE_CART_TOTAL WHERE username = '%s';", username)
+            cursor.execute("SELECT total_price FROM CALCULATE_CART_TOTAL WHERE username = '{0}';".format(username))
+            cart_total = cursor.fetchone()
         else:
             cursor.execute("SELECT * FROM CALCULATE_CART_TOTAL;")
-        cart_total = cursor.fetchall()
+            cart_total = cursor.fetchall()
 
     return cart_total
 
@@ -54,7 +59,7 @@ def get_valid_user_carts():
 def get_orders_with_usernames(username=None):
     with connection.cursor() as cursor:
         if username:
-            cursor.execute("SELECT * FROM ORDERS_WITH_USERNAMES WHERE username = '%s';", username)
+            cursor.execute("SELECT * FROM ORDERS_WITH_USERNAMES WHERE username = '{0}';".format(username))
         else:
             cursor.execute("SELECT * FROM ORDERS_WITH_USERNAMES;")
         orders = cursor.fetchall()
@@ -64,47 +69,58 @@ def get_orders_with_usernames(username=None):
 
 def get_all_orders_of_user(username):
     with connection.cursor() as cursor:
-        cursor.execute("SELECT f.title, fo.order_date FROM FOOD_ORDER fo"
+        cursor.execute("SELECT fo.order_id, fo.total_price, TO_CHAR(fo.order_date, 'DD.MM.YYYY'), f.title, re.review_comment, re.rating FROM FOOD_ORDER fo"
                        " INNER JOIN CART ca ON ca.cart_id = fo.cart_id"
                        " INNER JOIN CART2FOOD cf ON cf.cart_id = ca.cart_id"
                        " INNER JOIN FOOD f ON f.food_id = cf.food_id"
                        " INNER JOIN CLIENT cl ON cl.client_id = ca.client_id"
-                       " WHERE cl.username = '%s' ORDER BY fo.order_date desc;", username)
+                       " LEFT JOIN REVIEW re ON re.order_id = fo.order_id"
+                       " WHERE cl.username = '{0}' ORDER BY fo.order_date desc;".format(username))
         orders = cursor.fetchall()
 
     return orders
 
 
-def create_user(username, password, address, mail, phone):
-    user = User.objects.create_user(username=username, password=password)
+def create_user(user_id, username, address, phone):
+    #user = User.objects.create_user(username=username, password=password)
     with connection.cursor() as cursor:
-        cursor.execute("INSERT INTO CLIENT VALUES(client_seq.NEXTVAL, '{0}', '{1}', '{2}', '{3}', '{4}', {5});".format(username, password, address, mail, phone, user.id))
+        cursor.execute("INSERT INTO CLIENT VALUES(client_seq.NEXTVAL, '{0}', '{1}', '{2}', {3});".format(username, address, phone, user_id))
         cursor.execute("INSERT INTO CART (cart_id, client_id) VALUES(cart_seq.NEXTVAL, (SELECT client_id FROM CLIENT WHERE username = '{0}'));".format(username))
         connection.commit()
 
 
-def add_to_cart(username, title):
+def add_to_cart(username, food_id):
     with connection.cursor() as cursor:
-        cursor.execute("INSERT INTO CART2FOOD VALUES(c2f_seq.NEXTVAL, (SELECT cart_id FROM VALID_USER_CARTS WHERE username = '{0}'), (SELECT food_id FROM FOOD WHERE title = '{1}'));"
-                       .format(username, title))
+        cursor.execute("INSERT INTO CART2FOOD VALUES(c2f_seq.NEXTVAL, (SELECT cart_id FROM VALID_USER_CARTS WHERE username = '{0}'), {1});"
+                       .format(username, food_id))
         connection.commit()
 
 
-def create_order(username, payment_type):
-    with connection.cursor() as cursor:
-        cursor.execute("INSERT INTO FOOD_ORDER VALUES(food_order_seq.NEXTVAL,"
-                       " (SELECT total_price FROM CALCULATE_CART_TOTAL WHERE username = '{0}'),"
-                       " SYSDATE, '{1}',"
-                       " (SELECT address FROM CLIENT c WHERE username = '{0}'),"
-                       " (SELECT cart_id FROM VALID_USER_CARTS WHERE username = '{0}'));".format(username, payment_type))
+def give_order(username, payment_type):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("INSERT INTO FOOD_ORDER VALUES(food_order_seq.NEXTVAL,"
+                           " (SELECT total_price FROM CALCULATE_CART_TOTAL WHERE username = '{0}'),"
+                           " SYSDATE, '{1}',"
+                           " (SELECT address FROM CLIENT c WHERE username = '{0}'),"
+                           " (SELECT cart_id FROM VALID_USER_CARTS WHERE username = '{0}'));".format(username, payment_type))
 
-        cursor.execute("UPDATE CART SET valid = 0 WHERE cart_id = (SELECT cart_id FROM VALID_USER_CARTS WHERE username = '{0}');".format(username))
-        cursor.execute("INSERT INTO CART (cart_id, client_id) VALUES(cart_seq.NEXTVAL, (SELECT client_id FROM CLIENT WHERE username = '{0}'));".format(username))
+            cursor.execute("UPDATE CART SET valid = 0 WHERE cart_id = (SELECT cart_id FROM VALID_USER_CARTS WHERE username = '{0}');".format(username))
+            cursor.execute("INSERT INTO CART (cart_id, client_id) VALUES(cart_seq.NEXTVAL, (SELECT client_id FROM CLIENT WHERE username = '{0}'));".format(username))
+            connection.commit()
+    except Exception as e:
+        logger.exception(e)
+
+
+def add_review(order_id, comment, rating):
+    with connection.cursor() as cursor:
+        cursor.execute("INSERT INTO REVIEW VALUES(review_seq.NEXTVAL, '{0}', {1}, SYSDATE, {2});"
+                       .format(comment, rating, order_id))
         connection.commit()
 
 
-def create_review(username, comment, rating):
+def reset_cart(username):
     with connection.cursor() as cursor:
-        cursor.execute("INSERT INTO REVIEW VALUES(review_seq.NEXTVAL, '{0}', {1}, SYSDATE, (SELECT order_id FROM ORDERS_WITH_USERNAMES WHERE username = '{2}' AND ROWNUM <=1));"
-                       .format(comment, rating, username))
+        cursor.execute("DELETE FROM CART2FOOD WHERE cart_id = (SELECT cart_id FROM VALID_USER_CARTS WHERE username = '{0}');"
+                       .format(username))
         connection.commit()
