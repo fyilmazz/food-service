@@ -1,15 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>Login V2</title>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--===============================================================================================-->
+    <link rel="icon" type="image/png" href="/static/images/icons/favicon.ico"/>
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/static/vendor/bootstrap/css/bootstrap.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/static/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/static/fonts/iconic/css/material-design-iconic-font.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/static/vendor/animate/animate.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/static/vendor/css-hamburgers/hamburgers.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/static/vendor/animsition/css/animsition.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/static/vendor/select2/select2.min.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/static/vendor/daterangepicker/daterangepicker.css">
+    <!--===============================================================================================-->
+    <link rel="stylesheet" type="text/css" href="/static/css/util.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/main.css">
+    <!--===============================================================================================-->
 </head>
 <body>
-<h2>Kayıt ol</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Kayıt ol</button>
-</form>
+
+<div class="limiter">
+    <div class="container-login100">
+        <div class="wrap-login100">
+					<span class="login100-form-title p-b-26">
+						Hoşgeldiniz
+					</span>
+            <span class="login100-form-title p-b-48">
+						<i class="zmdi zmdi-font"></i>
+					</span>
+            <div id="login">
+                <form class="form-horizontal" method="post">
+                    {% csrf_token %}
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}" />
+                    {% endif %}
+                    <div class="wrap-input100">
+                        <p><label for="id_username">Kullanıcı adı:</label> <input class="input100" type="text" name="username" maxlength="150" autofocus="" required="" id="id_username">
+                    </div>
+                    <span class="helptext" style="font-size: 12px;">Zorunlu. 50 karakter ya da daha az olmalı. Sadece harfler, rakamlar ve @/./+/-/_ karakterleri kullanılabilir.</span>
+                    <br><br>
+                    <div class="wrap-input100">
+                        <p><label for="id_email">E-posta adresi:</label> <input class="input100" type="email" name="email" maxlength="254" id="id_email"></p>
+                    </div>
+                    <div class="wrap-input100">
+                        <p><label for="id_password1">Parola:</label> <input class="input100" type="password" name="password1" required="" id="id_password1"></p>
+                    </div>
+                    <span class="helptext" style="font-size: 12px;">Parolanız diğer kişisel bilgileriniz ile çok benzer olamaz.Parolanız en az 8 karakter içermek zorunda.Parolanız genellikle kullanılan bir parola olamaz.Parolanız tamamıyla sayısal olamaz.</span>
+                    <br><br>
+                    <div class="wrap-input100">
+                        <p><label for="id_password2">Parola onayı:</label> <input class="input100" type="password" name="password2" required="" id="id_password2"></p>
+                    </div>
+                    <span class="helptext" style="font-size: 12px;">Doğrulama için önceki gibi aynı parolayı girin.</span>
+                    <br><br>
+                    <div class="wrap-input100">
+                        <p><label for="id_address">Adres:</label> <input class="input100" type="text" name="address" maxlength="500" required="" id="id_address"></p>
+                    </div>
+                    <div class="wrap-input100">
+                        <p><label for="id_phone_number">Telefon numarası (Örn: 05123456789):</label> <input class="input100" type="text" name="phone_number" maxlength="11" minlength="11" required="" id="id_phone_number"> </p>
+                    </div>
+                    <div class="container-login100-form-btn">
+                        <div class="wrap-login100-form-btn">
+                            <div class="login100-form-bgbtn"></div>
+                            <button class="login100-form-btn">
+                                Kayıt Ol
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="text-center p-t-115">
+						<span class="txt1">
+							Zaten hesabınız var mı?
+						</span>
+
+                <a class="txt2" href="/login">
+                    Giriş Yap
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
 </body>
 </html>

@@ -48,6 +48,17 @@ def get_cart_total(username=None):
     return cart_total
 
 
+def get_foods_in_cart(username):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT f.title, f.price FROM FOOD f"
+                       " INNER JOIN CART2FOOD cf ON cf.food_id=f.food_id"
+                       " INNER JOIN CART ca ON ca.cart_id = cf.cart_id"
+                       " INNER JOIN CLIENT cl ON cl.client_id = ca.client_id"
+                       " WHERE ca.valid = 1 AND cl.username = '{0}';".format(username))
+        cart_foods = cursor.fetchall()
+    return cart_foods
+
+
 def get_valid_user_carts():
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM VALID_USER_CARTS;")
@@ -82,7 +93,6 @@ def get_all_orders_of_user(username):
 
 
 def create_user(user_id, username, address, phone):
-    #user = User.objects.create_user(username=username, password=password)
     with connection.cursor() as cursor:
         cursor.execute("INSERT INTO CLIENT VALUES(client_seq.NEXTVAL, '{0}', '{1}', '{2}', {3});".format(username, address, phone, user_id))
         cursor.execute("INSERT INTO CART (cart_id, client_id) VALUES(cart_seq.NEXTVAL, (SELECT client_id FROM CLIENT WHERE username = '{0}'));".format(username))
@@ -123,4 +133,17 @@ def reset_cart(username):
     with connection.cursor() as cursor:
         cursor.execute("DELETE FROM CART2FOOD WHERE cart_id = (SELECT cart_id FROM VALID_USER_CARTS WHERE username = '{0}');"
                        .format(username))
+        connection.commit()
+
+
+def add_trigger():
+    with connection.cursor() as cursor:
+        cursor.execute("CREATE OR REPLACE TRIGGER  FOOD_TYPE_ID_TRIGGER"
+                       " before insert on FOOD_TYPE"
+                       " for each row"
+                       " begin"
+                       " if :NEW.TYPE_ID is null then"
+                       " :NEW.TYPE_ID := food_type_seq.nextval;"
+                       " end if;"
+                       " end; ")
         connection.commit()

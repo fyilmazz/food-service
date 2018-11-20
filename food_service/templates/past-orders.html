@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Yiyecek Servisi - Geçmiş Siparişler</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/custom.css"/>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="container">
+        <a class="navbar-brand" href="/">Online yiyecek servisiniz</a>
+        <div class="navbar-right">
+            <div class="container minicart" style="display:none; cursor:pointer" data-toggle="modal" data-target="#myModal"></div>
+            <a class="navbar-brand" href="/logout">Çıkış yap</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid breadcrumbBox text-center" style="margin-bottom: 3%;">
+    <ol class="breadcrumb">
+        <li><a href="/">Ürün Listesi</a></li>
+        <li class="active"><a href="#">Geçmiş Siparişler</a></li>
+    </ol>
+</div>
+
+<div class="container text-center">
+    <div class="col-md-12 col-sm-12">
+        <div class="bigcart"></div>
+    <ul style="margin-top: -15%;">
+        <li class="row totals" style="box-shadow: none; display: inline-block;">
+            <span class="itemName">Toplam harcama:</span>
+            <span class="price">{% if total_spend %} {{ total_spend }} {% else %} 0 {% endif %} TRY</span>
+        </li>
+    </ul>
+        {% for key, value in orders_dict.items %}
+            <hr style="border-top: 1px solid black;">
+            <ul>
+                <li class="row totals" style="box-shadow: none;">
+                    <span class="itemName">Sipariş tarihi:</span>
+                    <span class="price">{{ value.order_date }}</span>
+                    <span class="itemName">Tutar:</span>
+                    <span class="price">{{ value.total_price }}</span>
+                </li>
+                {% for food in value.foods %}
+                    <li class="row">
+                        <span class="itemName">{{ food }}</span>
+                    </li>
+                {% endfor %}
+                {% if value.review_comment %}
+                    <li class="row totals" style="box-shadow: none;">
+                        <h4>Yorum: {{ value.review_comment }}, Rating: {{ value.review_rating }}</h4>
+                    </li>
+                {% else %}
+                    <form method="post" action="/past-orders/">
+                        {% csrf_token %}
+                        <input type="hidden" name="order_id" value="{{ key }}">
+                        <input type="text" name="comment" placeholder="Yorum"/>
+                        <input type="number" min="0" max="10" step="1" name="rating" placeholder="Rating"/>
+                        <button type="submit">Yorum ekle</button>
+                    </form>
+                {% endif %}
+            </ul>
+        {% endfor %}
+    </div>
+
+    <div style="display: none" class="col-md-7 col-sm-12 text-left">
+        <ul>
+            <li class="row list-inline columnCaptions">
+                <span>Ürün</span>
+                <span>Fiyat</span>
+            </li>
+            {% for food in foods %}
+                <li class="row">
+                    <span class="itemName">{{ food.3 }} <span class="" style="font-size: 10px;">{% if food.2 %} : {{ food.2 }}, {% endif %}</span></span>
+                    <span class="popbtn"><a class="add-to-cart" style="cursor: pointer;" data-food-id="{{ food.0 }}"><span class="glyphicon glyphicon-check" style="top: -27px; left: -5px;"></span></a></span>
+                    <span class="price">{{ food.1 }} TRY</span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+</div>
+
+<!-- JavaScript includes -->
+
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/customjs.js"></script>
+
+</body>
+</html>

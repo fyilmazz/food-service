@@ -20,8 +20,9 @@ from food_service import views
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^$', views.index, name='index'),
     url(r'^signup/$', views.signup, name='signup'),
     url(r'^login/$', auth_views.login, name='login'),
     url(r'^logout/$', auth_views.logout, name='logout'),
+    url(r'^$', views.index, name='index'),
+    url(r'^past-orders/$', views.past_orders, name='past_orders')
 ]
