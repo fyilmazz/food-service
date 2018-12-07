@@ -136,14 +136,27 @@ def reset_cart(username):
         connection.commit()
 
 
-def add_trigger():
+def add_food_trigger():
     with connection.cursor() as cursor:
-        cursor.execute("CREATE OR REPLACE TRIGGER  FOOD_TYPE_ID_TRIGGER"
-                       " before insert on FOOD_TYPE"
-                       " for each row"
-                       " begin"
-                       " if :NEW.TYPE_ID is null then"
+        cursor.execute("CREATE OR REPLACE TRIGGER FOOD_ID_TRIGGER"
+                       " BEFORE INSERT ON FOOD"
+                       " FOR EACH ROW"
+                       " BEGIN"
+                       " if :NEW.FOOD_ID IS NULL THEN"
+                       " :NEW.FOOD_ID := food_seq.nextval;"
+                       " END if;"
+                       " END; ")
+        connection.commit()
+
+
+def add_food_type_trigger():
+    with connection.cursor() as cursor:
+        cursor.execute("CREATE OR REPLACE TRIGGER FOOD_TYPE_ID_TRIGGER"
+                       " BEFORE INSERT ON FOOD_TYPE"
+                       " FOR EACH ROW"
+                       " BEGIN"
+                       " if :NEW.TYPE_ID IS NULL THEN"
                        " :NEW.TYPE_ID := food_type_seq.nextval;"
-                       " end if;"
-                       " end; ")
+                       " END if;"
+                       " END; ")
         connection.commit()

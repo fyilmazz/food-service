@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shopping Cart</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="static/css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="static/css/custom.css"/>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="container">
+        <a class="navbar-brand" href="#">Your online store</a>
+        <div class="navbar-right">
+            <div class="container minicart" style="cursor: pointer" data-toggle="modal" data-target="#myModal"></div>
+            <!-- Modal -->
+            <div id="myModal" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Modal Header</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p>Some text in the modal.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid breadcrumbBox text-center">
+    <ol class="breadcrumb">
+        <li><a href="#">Geçmiş Siparişler</a></li>
+        <li class="active"><a href="#">Ürün Listesi</a></li>
+    </ol>
+</div>
+
+<div class="container text-center">
+
+    <div class="col-md-5 col-sm-12">
+        <div class="bigcart"></div>
+        <h1>Sepetiniz</h1>
+        <ul>
+            {% for food in cart_foods %}
+                <li class="row">
+                    <span class="itemName">{{ food.0 }}</span>
+                    <span class="price">{{ food.1 }} TRY</span>
+                </li>
+            {% endfor %}
+            <li class="row totals">
+                <span class="itemName">Sepet tutarı:</span>
+                <span class="price">{{ cart_total }} TRY</span>
+            </li>
+            <li class="row totals" style="box-shadow: none;">
+                <span class="order" style="float: left;"> <a class="reset-cart">Sepeti boşalt</a></span>
+                <span class="order" style="float: right;"> <a class="text-center">Sipariş Ver</a></span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="col-md-7 col-sm-12 text-left">
+        <ul>
+            <li class="row list-inline columnCaptions">
+                <span>Ürün</span>
+                <span>Fiyat</span>
+            </li>
+            {% for food in foods %}
+                <li class="row">
+                    <span class="itemName">{{ food.3 }} <span class="" style="font-size: 10px;">{% if food.2 %} : {{ food.2 }}, {% endif %}</span></span>
+                    <span class="popbtn"><a class="add-to-cart" href="#" data-food-id="{{ food.0 }}"><span class="glyphicon glyphicon-check" style="top: -27px; left: -5px;"></span></a></span>
+                    <span class="price">{{ food.1 }} TRY</span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+</div>
+
+<!-- JavaScript includes -->
+
+<script src="/static/js/jquery-3.3.1.min.js"></script>
+<script src="static/js/bootstrap.min.js"></script>
+<script src="static/js/customjs.js"></script>
+<script>
+    $(document).ready(function() {
+        $("a.add-to-cart").click(function(){
+            console.log()
+            var food_id = $(this).data('food-id');
+            $.post("/",
+                {
+                    food_id: food_id,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                function(data, status){
+                    if (status == 'success')
+                        location.reload();
+                });
+        });
+
+        $("a.reset-cart").click(function(){
+            $.post("/",
+                {
+                    reset_cart: 1,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                function(data, status){
+                    if (status == 'success')
+                        location.reload();
+                });
+        });
+
+        $("button.give-order").click(function(){
+            $.post("/",
+                {
+                    give_order: 1,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                function(data, status){
+                    if (status == 'success')
+                        location.reload();
+                });
+        });
+    });
+</script>
+</body>
+</html>
